@@ -95,12 +95,12 @@ export default function AddEvent() {
               </Grid>
               <Grid item xs={12}>
                 <FormControl fullWidth variant="outlined" required>
-                  <InputLabel id="sport-type-label">Sport Type</InputLabel>
+                  <InputLabel id="sport-type-label">Sport Category</InputLabel>
                   <Select
                     labelId="sport-type-label"
                     value={sportType}
                     onChange={handleSportTypeChange}
-                    label="Sport Type"
+                    label="Sport Category"
                   >
                     {Object.values(SportType).map((type) => (
                       <MenuItem key={type} value={type}>

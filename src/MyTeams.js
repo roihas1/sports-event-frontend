@@ -25,6 +25,7 @@ const StyledCard = styled(Card)(({ theme }) => ({
   flexDirection: 'column',
   height: '100%',
   boxShadow: theme.shadows[3],
+  
 }));
 
 const StyledCardContent = styled(CardContent)(({ theme }) => ({
@@ -32,14 +33,28 @@ const StyledCardContent = styled(CardContent)(({ theme }) => ({
 }));
 
 const StyledButton = styled(Button)(({ theme }) => ({
-  marginTop: theme.spacing(2),
+  marginBottom: theme.spacing(4),
+  textTransform: 'uppercase',
+  padding: theme.spacing(1.5, 4),
+  fontWeight: 'bold',
+  marginTop: theme.spacing(2.5),
+  marginRight: theme.spacing(2.5),
+  backgroundColor: "#2E3B55",
+  color: "white",
+  transition: "color 0.3s, background-color 0.3s ease", // Transition for smooth hover effect
+  "&:hover": {
+    backgroundColor: "#fff", // Change the background color on hover
+    color: "#2E3B55", // Change text color to the same as the original background color
+  }
 }));
+
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialog-paper': {
     padding: theme.spacing(2),
   },
 }));
+
 
 function MyTeams() {
   const [teams, setTeams] = useState([]);
@@ -152,9 +167,9 @@ function MyTeams() {
 
       {error && <Alert severity="error">{error}</Alert>}
       {successMessage && <Alert severity="success">{successMessage}</Alert>} {/* Success message */}
-      <Button variant="contained" color="primary" onClick={handleCreateOpen} sx={{ mb: 4 }}>
+      <StyledButton variant="contained" color="primary" onClick={handleCreateOpen} sx={{ mb: 4 }}>
         Create New Team
-      </Button>
+      </StyledButton>
 
       <Grid container spacing={3}>
         {teams.length > 0 ? (
@@ -178,7 +193,6 @@ function MyTeams() {
                   </Typography>
                   <StyledButton
                     variant="outlined"
-                    color="primary"
                     onClick={() => handleEditOpen(team)}
                   >
                     Edit Team

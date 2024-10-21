@@ -1,4 +1,4 @@
-import React, { useEffect, useState,useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axiosInstance from './axiosConfig';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
@@ -8,12 +8,50 @@ import {
   Typography, 
   Grid, 
   Box, 
-  CircularProgress 
+  CircularProgress, 
+  MenuItem, 
+  Select 
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-  import { useError } from './ErrorContext';
+import { useError } from './ErrorContext';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
 
 // Styled Components
+const SortContainer = styled(Box)(({ theme }) => ({
+  marginBottom: theme.spacing(4),
+  padding: theme.spacing(0),
+  backgroundColor: theme.palette.background.paper,
+  borderRadius: theme.shape.borderRadius,
+  boxShadow: theme.shadows[3],
+  display: 'flex',          
+  alignItems: 'center',     
+  justifyContent: 'center', 
+  gap: theme.spacing(2),    
+}));
+
+const SortLabel = styled(Typography)(({ theme }) => ({
+  marginRight: theme.spacing(2),
+  color: theme.palette.text.primary,
+  fontWeight: 'bold',
+}));
+
+const StyledSelect = styled(Select)(({ theme }) => ({
+  minWidth: 180,
+  backgroundColor: theme.palette.background.default,
+  '& .MuiOutlinedInput-notchedOutline': {
+    borderColor: theme.palette.primary.main,
+  },
+  '&:hover .MuiOutlinedInput-notchedOutline': {
+    borderColor: theme.palette.primary.light,
+  },
+}));
+
+const SortOption = styled(Box)({
+  display: 'flex',
+  alignItems: 'center',
+});
+
 const StyledCard = styled(Card)(({ theme }) => ({
   padding: theme.spacing(3),
   marginBottom: theme.spacing(3),
@@ -34,12 +72,22 @@ const StyledButton = styled(Button)(({ theme }) => ({
   textTransform: 'uppercase',
   padding: theme.spacing(1.5, 4),
   fontWeight: 'bold',
+  marginTop: theme.spacing(2.5),
+  marginRight: theme.spacing(2.5),
+  backgroundColor: "#2E3B55",
+  color: "white",
+  transition: "color 0.3s, background-color 0.3s ease", 
+  "&:hover": {
+    backgroundColor: "#fff", 
+    color: "#2E3B55", 
+  }
 }));
+
 
 const SectionTitle = styled(Typography)(({ theme }) => ({
   marginBottom: theme.spacing(3),
   fontWeight: 'bold',
-  color: theme.palette.primary.main,
+  color: "#2E3B55",
 }));
 
 const SectionContainer = styled(Grid)(({ theme }) => ({
@@ -68,6 +116,7 @@ const Home = () => {
   const [error, setError] = useState(null);
   const { showError } = useError();
   const navigate = useNavigate();
+  const [sortCriteria, setSortCriteria] = useState('date');
 
   // Fetch functions
   const fetchEvents = useCallback(async () => {
@@ -111,9 +160,25 @@ const Home = () => {
     loadData();
   }, [fetchEvents, fetchMyEvents, fetchRegisteredEvents, showError]);
 
+  const sortEvents = (events) => {
+    return [...events].sort((a, b) => {
+      if (sortCriteria === 'date') {
+        return new Date(a.date) - new Date(b.date);
+      } else if (sortCriteria === 'sportType') {
+        return a.sportType?.localeCompare(b.sportType);
+      }
+      return 0;
+    });
+  };
+  const handleSortChange = (event) => {
+    setSortCriteria(event.target.value);
+  };
   const handleAddEvent = () => {
     navigate('/add-event');
   };
+  const sortedEvents = sortEvents(events);
+  const sortedMyEvents = sortEvents(myEvents);
+  const sortedRegisteredEvents = sortEvents(registeredEvents);
 
   const handleDeleteRegistration = async (eventId, teamName) => {
     try {
@@ -149,17 +214,6 @@ const Home = () => {
     );
   }
 
-  if (error) {
-    return (
-      <Box sx={{ flexGrow: 1, bgcolor: '#f5f5f5', py: 6 }}>
-        <Container maxWidth="lg">
-          <Typography variant="h6" color="error" align="center">
-            {error}
-          </Typography>
-        </Container>
-      </Box>
-    );
-  }
 
   return (
     <Box sx={{ flexGrow: 1, bgcolor: '#f5f5f5', py: 6 }}>
@@ -167,18 +221,44 @@ const Home = () => {
         <Typography variant="h2" align="center" gutterBottom sx={{ mb: 4 }}>
           Sports Events
         </Typography>
+        
+
+        <SortContainer>
         <StyledButton variant="contained" color="primary" onClick={handleAddEvent}>
           Add New Event
         </StyledButton>
+          <SortLabel variant="h6" component="span">
+            Sort By:
+          </SortLabel>
+          <StyledSelect
+            value={sortCriteria}
+            onChange={handleSortChange}
+            variant="outlined"
+          >
+            <MenuItem value="date">
+              <SortOption>
+                <CalendarTodayIcon sx={{ mr: 1 }} />
+                Date
+              </SortOption>
+            </MenuItem>
+            <MenuItem value="sportType">
+              <SortOption>
+                <SportsSoccerIcon sx={{ mr: 1 }} />
+                Sport Category
+              </SortOption>
+            </MenuItem>
+          </StyledSelect>
+        </SortContainer>
 
         <Grid container spacing={4}>
+          {/* My Events Section */}
           <SectionContainer item xs={12} md={4}>
             <SectionTitle variant="h4" component="div">
               My Events
             </SectionTitle>
-            {myEvents.length > 0 ? (
+            {sortedMyEvents.length > 0 ? (
               <>
-                {myEvents.slice(0, 5).map(event => (
+                {sortedMyEvents.slice(0, 5).map(event => (
                   <StyledCard key={event.id}>
                     <EventLink to={`/events/${event.id}`}>
                       <Typography variant="h5" gutterBottom>
@@ -191,7 +271,7 @@ const Home = () => {
                         {event.eventDescription}
                       </Typography>
                       <FooterText>
-                        Sport Type: {event.sportType || 'General'}
+                        Sport Category: {event.sportType || 'General'}
                       </FooterText>
                     </EventLink>
                     <Button
@@ -204,8 +284,8 @@ const Home = () => {
                     </Button>
                   </StyledCard>
                 ))}
-                {myEvents.length > 5 && (
-                  <StyledButton variant="contained" color="primary" onClick={() => handleViewAll('My Events', myEvents)}>
+                {sortedMyEvents.length > 5 && (
+                  <StyledButton variant="contained" color="primary" onClick={() => handleViewAll('My Events', sortedMyEvents)}>
                     View All My Events
                   </StyledButton>
                 )}
@@ -215,13 +295,14 @@ const Home = () => {
             )}
           </SectionContainer>
 
+          {/* Registered Events Section */}
           <SectionContainer item xs={12} md={4}>
             <SectionTitle variant="h4" component="div">
               Registered Events
             </SectionTitle>
-            {registeredEvents.length > 0 ? (
+            {sortedRegisteredEvents.length > 0 ? (
               <>
-                {registeredEvents.slice(0, 5).map(reg => (
+                {sortedRegisteredEvents.slice(0, 5).map(reg => (
                   <StyledCard key={reg.id}>
                     <EventLink to={`/events/${reg.event.id}`}>
                       <Typography variant="h5" gutterBottom>
@@ -234,7 +315,7 @@ const Home = () => {
                         {reg.event.description}
                       </Typography>
                       <FooterText>
-                        Team: {reg.team.teamName} | Sport Type: {reg.event.sportType || 'General'}
+                        Team: {reg.team.teamName} | Sport Category: {reg.event.sportType || 'General'}
                       </FooterText>
                     </EventLink>
                     <Button
@@ -247,8 +328,8 @@ const Home = () => {
                     </Button>
                   </StyledCard>
                 ))}
-                {registeredEvents.length > 5 && (
-                  <StyledButton variant="contained" color="primary" onClick={() => handleViewAll('Registered Events', registeredEvents)}>
+                {sortedRegisteredEvents.length > 5 && (
+                  <StyledButton variant="contained" color="primary" onClick={() => handleViewAll('Registered Events', sortedRegisteredEvents)}>
                     View All Registered Events
                   </StyledButton>
                 )}
@@ -258,13 +339,14 @@ const Home = () => {
             )}
           </SectionContainer>
 
+          {/* Other Events Section */}
           <SectionContainer item xs={12} md={4}>
             <SectionTitle variant="h4" component="div">
               Other Events
             </SectionTitle>
-            {events.length > 0 ? (
+            {sortedEvents.length > 0 ? (
               <>
-                {events.slice(0, 5).map(event => (
+                {sortedEvents.slice(0, 5).map(event => (
                   <StyledCard key={event.id}>
                     <EventLink to={`/events/${event.id}`}>
                       <Typography variant="h5" gutterBottom>
@@ -277,13 +359,13 @@ const Home = () => {
                         {event.description}
                       </Typography>
                       <FooterText>
-                        Sport Type: {event.sportType || 'General'}
+                        Sport Category: {event.sportType || 'General'}
                       </FooterText>
                     </EventLink>
                   </StyledCard>
                 ))}
-                {events.length > 5 && (
-                  <StyledButton variant="contained" color="primary" onClick={() => handleViewAll('Other Events', events)}>
+                {sortedEvents.length > 5 && (
+                  <StyledButton variant="contained" color="primary" onClick={() => handleViewAll('Other Events', sortedEvents)}>
                     View All Other Events
                   </StyledButton>
                 )}

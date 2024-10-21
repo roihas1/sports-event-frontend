@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { Typography, Container, Box, Card, Grid } from '@mui/material';
+import { Typography, Container, Box, Card, Grid, Button } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { useError } from './ErrorContext'; // Import useError context
+import axiosInstance from './axiosConfig';
 
 // Styled Components
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -35,6 +36,34 @@ const AllEventsPage = () => {
   const { state } = useLocation();
   const { sectionName, events } = state || { sectionName: 'Events', events: [] };
   const { showError } = useError(); // Access error handling context
+  const [fetchedEvents, setFetchedEvents] = useState([]);
+
+  // Function to fetch registered events
+  const fetchRegisteredEvents = useCallback(async () => {
+    try {
+      const response = await axiosInstance.get('/events/user/registeredEvents');
+      setFetchedEvents(response.data);
+    } catch (error) {
+      showError('Error fetching registered events');
+    }
+  }, [showError]);
+
+  // Fetch events on mount if viewing registered events
+  useEffect(() => {
+    if (sectionName === 'Registered Events') {
+      fetchRegisteredEvents();
+    }
+  }, [sectionName, fetchRegisteredEvents]);
+
+  // Handle deletion of a registration
+  const handleDeleteRegistration = async (eventId, teamName) => {
+    try {
+      await axiosInstance.delete(`/events/${eventId}/registration/${teamName}`);
+      fetchRegisteredEvents(); // Refetch events after deletion
+    } catch (error) {
+      showError('Error deleting registration');
+    }
+  };
 
   return (
     <Box sx={{ flexGrow: 1, bgcolor: '#f5f5f5', py: 6 }}>
@@ -43,10 +72,10 @@ const AllEventsPage = () => {
           {sectionName}
         </Typography>
         
-        {events.length > 0 ? (
+        {fetchedEvents.length > 0 || events.length > 0 ? (
           <Grid container spacing={4}>
             {sectionName === 'Registered Events' ? (
-              events.map(reg => (
+              fetchedEvents.map(reg => (
                 <Grid item xs={12} sm={6} md={4} lg={3} key={reg.id}>
                   <StyledCard>
                     <EventLink to={`/events/${reg.event.id}`}>
@@ -63,9 +92,18 @@ const AllEventsPage = () => {
                         Team: {reg.team.teamName}
                       </FooterText>
                       <FooterText>
-                        Sport Type: {reg.event.sportType || 'General'}
+                        Sport Category: {reg.event.sportType || 'General'}
                       </FooterText>
-                    </EventLink>
+                      </EventLink>
+                      <Button
+                        variant="outlined"
+                        color="secondary"
+                        onClick={() => handleDeleteRegistration(reg.event.id, reg.team.teamName)}
+                        sx={{ mt: 2 }}
+                      >
+                        Cancel Registration
+                      </Button>
+                    
                   </StyledCard>
                 </Grid>
               ))
@@ -84,7 +122,7 @@ const AllEventsPage = () => {
                         {event.description}
                       </Typography>
                       <FooterText>
-                        Sport Type: {event.sportType || 'General'}
+                        Sport Category: {event.sportType || 'General'}
                       </FooterText>
                     </EventLink>
                   </StyledCard>

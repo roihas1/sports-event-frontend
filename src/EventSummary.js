@@ -14,7 +14,7 @@ const StyledCard = styled(Card)(({ theme }) => ({
 const Title = styled(Typography)(({ theme }) => ({
   marginBottom: theme.spacing(2),
   fontWeight: 'bold',
-  color: theme.palette.primary.main,
+  color: "#2E3B55",
   textAlign: 'center',
 }));
 
@@ -48,7 +48,7 @@ const EventSummary = ({ event, numOfTeams }) => {
               <IconWrapper>
                 <Event />
               </IconWrapper>
-              <Typography variant="h6" color="textSecondary">Sport Type:</Typography>
+              <Typography variant="h6" color="textSecondary">Sport Category:</Typography>
               <Typography variant="body1" marginLeft={1}>{event?.sportType || "N/A"}</Typography>
             </InfoItem>
 

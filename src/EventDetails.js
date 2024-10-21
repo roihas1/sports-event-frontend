@@ -18,7 +18,7 @@ const StyledButton = styled(Button)(({ theme }) => ({
 const SectionTitle = styled(Typography)(({ theme }) => ({
   marginBottom: theme.spacing(2),
   fontWeight: 'bold',
-  color: theme.palette.primary.main,
+  color: "#2E3B55",
 }));
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
@@ -40,6 +40,7 @@ const EventDetails = () => {
   const [isOwner, setIsOwner] = useState(false);
   const [isScheduleCreated, setIsScheduleCreated] = useState(false);
   const [eventDate, setEventDate] = useState(null);
+  const [registrationDeadline, setRegistrationDeadline] = useState(null);
   const { showError } = useError();
   
   useEffect(() => {
@@ -48,6 +49,7 @@ const EventDetails = () => {
         const response = await axiosInstance.get(`/events/${id}`);
         setEvent(response.data);
         setEventDate(new Date(response.data.date));
+        setRegistrationDeadline(new Date(response.data.registrationDeadline));
 
         const teamsResponse = await axiosInstance.get(`/events/${id}/numOfTeams`);
         setNumOfTeams(teamsResponse.data);
@@ -120,9 +122,9 @@ const EventDetails = () => {
 
   const handleCreateSchedule = async () => {
     try {
-      console.log( event.date);
       await axiosInstance.post(`/schedule/create/${id}`, {
         startDate: event.date,
+        startTime: event.time,
       });
       setIsScheduleCreated(true);
     } catch (err) {
@@ -130,7 +132,7 @@ const EventDetails = () => {
     }
   };
 
-  const isPastEventDate = eventDate ? new Date() > eventDate : false;
+  const isPastRegistrationDeadline = registrationDeadline ? new Date() > registrationDeadline : false;
   const canCreateSchedule = numOfTeams > 2;
 
   return (
@@ -155,7 +157,7 @@ const EventDetails = () => {
                       variant="contained" 
                       color="secondary" 
                       onClick={handleRegister} 
-                      disabled={isPastEventDate}
+                      disabled={isPastRegistrationDeadline}
                     >
                       Register
                     </StyledButton>

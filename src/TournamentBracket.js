@@ -1,16 +1,24 @@
 import React, { useState, useEffect } from "react";
-import { Card, CardContent, Typography, Divider, Box, Button, CircularProgress } from "@mui/material";
+import {
+  Card,
+  CardContent,
+  Typography,
+  Divider,
+  Box,
+  Button,
+  CircularProgress,
+} from "@mui/material";
 import { styled } from "@mui/material/styles";
 import axiosInstance from './axiosConfig';
 import { useError } from './ErrorContext';
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 
-// Styled components (unchanged)
+// Styled components
 const StyledCard = styled(Card)(({ theme }) => ({
   marginTop: theme.spacing(3),
-  padding: theme.spacing(2),
+  padding: theme.spacing(3),
   backgroundColor: theme.palette.background.paper,
-  boxShadow: theme.shadows[3],
+  boxShadow: theme.shadows[5],
   width: '100%',
   overflowX: 'auto',
 }));
@@ -31,8 +39,9 @@ const Title = styled(Typography)(({ theme }) => ({
 
 const BracketContainer = styled(Box)(({ theme }) => ({
   display: 'flex',
-  justifyContent: 'flex-start',
-  alignItems: 'center',
+  flexDirection: 'row',
+  flexWrap: 'wrap',
+  justifyContent: 'center',
   padding: theme.spacing(2),
 }));
 
@@ -46,22 +55,23 @@ const Round = styled(Box)(({ theme }) => ({
 const Match = styled(Box)(({ theme }) => ({
   border: `1px solid ${theme.palette.divider}`,
   borderRadius: theme.shape.borderRadius,
-  padding: theme.spacing(1),
+  padding: theme.spacing(1.5),
   marginBottom: theme.spacing(2),
-  width: '220px', // Slightly increased width to accommodate scores
+  width: '220px',
   backgroundColor: theme.palette.background.default,
   '&:hover': {
     backgroundColor: theme.palette.action.hover,
   },
 }));
 
-const TeamRow = styled(Box)({
+const TeamRow = styled(Box)(({ theme }) => ({
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
-});
+}));
 
 const Team = styled(Typography)(({ theme, winner }) => ({
+  
   fontWeight: winner ? 'bold' : 'normal',
   color: winner ? theme.palette.success.main : theme.palette.text.primary,
 }));
@@ -78,6 +88,7 @@ const formatDate = (dateString) => {
     day: 'numeric',
     hour: 'numeric',
     minute: 'numeric',
+    hour12: true,
   });
 };
 
@@ -90,7 +101,6 @@ function TournamentBracket() {
   const location = useLocation();
   const isOwner = location.state?.isOwner || false;
 
-  
   useEffect(() => {
     const fetchGames = async () => {
       try {
@@ -118,34 +128,31 @@ function TournamentBracket() {
       showError('Failed to delete games');
     }
   };
+
   const handleUpdateScore = async (game) => {
     const team1Score = prompt(`Enter the new score for ${game.team1.teamName}:`, game.score ? game.score[0] : 0);
     const team2Score = prompt(`Enter the new score for ${game.team2.teamName}:`, game.score ? game.score[1] : 0);
-  
+
     if (team1Score !== null && team2Score !== null) {
       try {
         setLoading(true);
         const response = await axiosInstance.patch(`/schedule/update/${game.id}/score`, {
-          matchScore: [Number(team1Score), Number(team2Score)]
+          matchScore: [Number(team1Score), Number(team2Score)],
         });
-  
-        setGames((prevGames) => {
-          console.log(prevGames)
-          const newGames = prevGames.map((g) =>
-            g.id === game.id ? { ...g, score: response.data.score } : g
-          );
-          return newGames;  
-        });
+        setGames((prevGames) => 
+          prevGames.map((g) =>
+            g.id === game.id ? { ...g, score: response.data } : g
+          )
+        );
       } catch (error) {
         console.error('Error updating score:', error);
         showError('Failed to update score');
-      }
-      finally{
+      } finally {
         setLoading(false);
       }
     }
   };
-  
+
   // Group games by round
   const roundsMap = games.reduce((acc, game) => {
     acc[game.round] = [...(acc[game.round] || []), game];
@@ -166,30 +173,29 @@ function TournamentBracket() {
     );
   }
 
-
   return (
     <StyledCard>
       <CardContent>
         <Title variant="h5">Tournament Bracket</Title>
         <Divider style={{ marginBottom: '16px' }} />
-       
-        <Box display="flex" justifyContent="flex-start" mb={2} gap={1}>
+
+        <Box display="flex" justifyContent="center" mb={2} gap={2}>
           <StyledButton
-            variant="outlined" 
+            variant="outlined"
             color="primary"
             onClick={handleBack}
           >
             Back to Event Details
           </StyledButton>
-          <StyledButton 
-            variant="contained" 
-            color="error" 
+          <StyledButton
+            variant="contained"
+            color="error"
             onClick={deleteAllGames}
           >
             Delete All Games
           </StyledButton>
         </Box>
-        
+
         <BracketContainer>
           {rounds.map(([roundNum, roundGames]) => (
             <Round key={roundNum}>
@@ -226,12 +232,11 @@ function TournamentBracket() {
               ))}
             </Round>
           ))}
-          
         </BracketContainer>
-        
       </CardContent>
     </StyledCard>
   );
 }
 
 export default TournamentBracket;
+

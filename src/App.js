@@ -31,7 +31,7 @@ function isTokenExpired() {
     return true;
   }
 
-  return Date.now()+1000 > Number(expiresIn);
+  return Date.now()+2005 > Number(expiresIn);
 }
 function App() {
   const [isLoggedOut, setIsLoggedOut] = useState(false);
@@ -52,7 +52,7 @@ function App() {
       const expiresIn = localStorage.getItem('expiresIn');
       console.log(Date.now()+1000  )
       console.log(Number(expiresIn))
-      interval = setInterval(checkTokenExpiration,Number(expiresIn) - Date.now()- 1000); 
+      interval = setInterval(checkTokenExpiration,Number(expiresIn) - Date.now()- 2000); 
     }
 
     return () => clearInterval(interval); 
